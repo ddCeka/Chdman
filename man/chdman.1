@@ -1,0 +1,708 @@
+.\"  -*- nroff -*-
+.\"
+.\" chdman.1
+.\"
+.\" Man page created from source and usage information by 
+.\" Reva Floyd <reva.floyd@disroot.org>, September 2025
+.\"
+.TH CHDMAN 1 2026-05-06 0.285 "MAME Compressed Hunks of Data (CHD) manager"
+.\"
+.\" NAME chapter
+.SH MANUAL
+.B chdman
+manual page for chdman Compressed Hunks of Data (CHD) manager
+.\"
+.\" SYNOPSIS chapter
+.SH SYNOPSIS
+.IP \(bu 2
+.B Common options
+.IP \(bu 2
+.B Commands
+.RS 2
+.IP \(bu 2
+info
+.IP \(bu 2
+verify
+.IP \(bu 2
+createraw
+.IP \(bu 2
+createhd
+.IP \(bu 2
+createcd
+.IP \(bu 2
+createdvd
+.IP \(bu 2
+createld
+.IP \(bu 2
+extractraw
+.IP \(bu 2
+extracthd
+.IP \(bu 2
+extractcd
+.IP \(bu 2
+extractdvd
+.IP \(bu 2
+extractld
+.IP \(bu 2
+addmeta
+.IP \(bu 2
+delmeta
+.IP \(bu 2
+dumpmeta
+.IP \(bu 2
+.B listtemplates
+.RE
+.IP \(bu 2
+.B Compression algorithms
+.\"
+.\" DESCRIPTION chapter
+.SH DESCRIPTION
+.B chdman
+can be used to create, convert, check the integrity of and
+extract data from media images in CHD (Compressed Hunks of Data) format.
+.PP
+The basic usage is \f[CR]chdman <command> <option>...\f[R]
+.\"
+.\"
+.SS Common options
+.TP
+The options available depend on the command, 
+but the following options are used by multiple commands:
+.TP
+.B \(eninput  / \-i
+.TP
+.IP
+Specify the input file. This option is required for most commands. 
+The input file formats supported depend on the command
+.IP
+.TP
+.B \(eninputparent  / \-ip
+.TP
+.IP
+Specify the parent CHD file for the input file. 
+This option is supported for most commands that operate on CHD format 
+input files. This option must be used if the input file is a delta CHD, 
+storing only the hunks that differ from its parent CHD.
+.IP
+.TP
+.B \(eninputstartbyte  / \-isb
+.TP
+.IP
+Specify the offset to the data in the input file in bytes. 
+This is useful for creating CHD format files from input files 
+that contain a header before the start of the data, or for extracting 
+partial content from a CHD format file. May not be specified in 
+combination with the \(ga\-\-inputstarthunk\(ga / \(ga\-ish\(ga option.
+.IP
+.TP
+.B \(eninputstarthunk  / \-ish
+.TP
+.IP
+Specify the offset to the data in the input file in hunks. 
+May not be specified in combination with 
+the \(ga\-\-inputstartbyte\(ga / \(ga\-isb\(ga option.
+.IP
+.TP
+.B \(eninputbytes  / \-ib
+.TP
+.IP
+Specify the amount of input data to use in bytes, 
+starting from the offset to the data in the input file. 
+This is useful for creating CHD format files from input files that 
+contain additional content after the data, or for extracting 
+partial content from a CHD format file. 
+May not be specified in combination with 
+the \(ga\-\-inputhunks\(ga / \(ga\-ih\(ga option.
+.IP
+.TP
+.B \(eninputhunks  / \-ih
+.TP
+.IP
+Specify the amount of input data to use in hunks, 
+starting from the offset to the data in the input file. 
+May not be specified in combination with 
+the \(ga\-\-inputbytes\(ga / \(ga\-ib\(ga option.
+.IP
+.TP
+.B \(enoutput  / \-o
+.TP
+.IP
+Specify the output file name. This option is required for 
+commands that produce output files. 
+The output file formats supported depend on the command.
+.IP
+.TP
+.B \(enoutputparent  / \-op
+.TP
+.IP
+Specify the parent CHD file for the output file. 
+This option is supported for commands that produce CHD format 
+output files. Using this option produces a delta CHD, 
+storing only the hunks that differ from its parent CHD. 
+The parent CHD should be the same media type and size, 
+with the same hunk size.
+.IP
+.TP
+.B \(encompression none|[,]\&... / \-c none|[,]\&...
+.TP
+.IP
+Specify compression algorithms to use. This option is supported for 
+commands that produce CHD format output files. 
+Specify none to disable compression, or specify up to 
+four comma\-separated compression algorithms. 
+See compression algorithms for supported compression algorithms. 
+Compression must be disable to create writable media image files.
+.IP
+.TP
+.B \(enhunksize  / \-hs
+.TP
+.IP
+Specifies the hunk size in bytes. This option is supported for 
+commands that produce CHD format output files. 
+The hunk size must be no smaller than 16 bytes and no larger 
+than 1048576 bytes (1 MiB). The hunk size must be a multiple 
+of the sector size or unit size of the media. Larger hunk sizes 
+may give better compression ratios, but reduce performance for small 
+random reads as an entire hunk needs to be read and decompressed at a time.
+.IP
+.TP
+.B \(enforce / \-f
+.TP
+.IP
+Overwrite output files if they already exist. This option is supported 
+for commands that produce output files.
+.IP
+.TP
+.B \(enverbose / \-v
+.TP
+.IP
+Enable verbose output. This prints more detailed information for some commands.
+.IP
+.TP
+.B \(ennumprocessors  / \-np
+.TP
+.IP
+Limit the maximum number of concurrent threads used for data compression. 
+This option is supported for commands that produce CHD format output files.
+.IP
+.TP
+.SS Commands
+.TP
+.\"
+.TP
+.SS info
+.TP
+.IP
+Display information about a CHD format file.
+Information includes:
+.IP \(bu 2
+CHD format version and compression algorithms used.
+.IP \(bu 2
+Compressed and uncompressed sizes and overall compression ratio.
+.IP \(bu 2
+Hunk size, unit size and number of hunks in the file.
+.IP \(bu 2
+SHA1 digests of the data and metadata.
+.PP
+Common options supported:
+.IP \(bu 2
+.B \f[CR]\-\-input <file>\f[R] / \f[CR]\-i <file>\f[R] (required)
+.IP \(bu 2
+.B \f[CR]\-\-verbose\f[R] / \f[CR]\-v\f[R]
+.\"
+.TP
+.SS verify
+.TP
+.IP
+Verify the integrity of a CHD format file.
+The input file must be a read\-only CHD format file (the integrity of
+writable CHD files cannot be verified). Note that this command modifies 
+its input file if the \f[CR]\-\-fix\f[R] / \f[CR]\-f\f[R] option is specified.
+.PP
+Common options supported:
+.IP \(bu 2
+\f[CR]\-\-input <file>\f[R] / \f[CR]\-i <file>\f[R] (required)
+.IP \(bu 2
+\f[CR]\-\-inputparent <chdfile>\f[R] / \f[CR]\-ip <chdfile>\f[R]
+.PP
+Additional options:
+.IP \(bu 2
+\f[CR]\-\-fix\f[R] / \f[CR]\-f\f[R]
+.\"
+.TP
+.SS createraw
+.TP
+.IP
+Create a CHD format file from a raw media image.
+.PP
+Common options supported:
+.IP \(bu 2
+\f[CR]\-\-input <file>\f[R] / \f[CR]\-i <file>\f[R] (required)
+.IP \(bu 2
+\f[CR]\-\-inputstartbyte <offset>\f[R] / \f[CR]\-isb <offset>\f[R]
+.IP \(bu 2
+\f[CR]\-\-inputstarthunk <offset>\f[R] / \f[CR]\-ish <offset>\f[R]
+.IP \(bu 2
+\f[CR]\-\-inputbytes <length>\f[R] / \f[CR]\-ib <length>\f[R]
+.IP \(bu 2
+\f[CR]\-\-inputhunks <length>\f[R] / \f[CR]\-ih <length>\f[R]
+.IP \(bu 2
+\f[CR]\-\-output <file>\f[R] / \f[CR]\-o <file>\f[R] (required)
+.IP \(bu 2
+\f[CR]\-\-outputparent <chdfile>\f[R] / \f[CR]\-op <chdfile>\f[R]
+.IP \(bu 2
+\f[CR]\-\-compression none|<type>[,<type>]...\f[R] /
+\f[CR]\-c none|<type>[,<type>]...\f[R]
+.IP \(bu 2
+\f[CR]\-\-hunksize <bytes>\f[R] / \f[CR]\-hs <bytes>\f[R]
+.IP \(bu 2
+\f[CR]\-\-force\f[R] / \f[CR]\-f\f[R]
+.IP \(bu 2
+\f[CR]\-\-numprocessors <count>\f[R] / \f[CR]\-np <count>\f[R]
+.PP
+Additional options:
+.PP
+.IP \(bu 2
+\f[CR]\-\-unitsize <bytes>\f[R] / \f[CR]\-us <bytes>\f[R] (required)
+.IP
+.IP
+The unit size for the output CHD file in bytes. 
+This is the smallest unit of data that can be addressed within the CHD file. 
+It should match the sector size or page size of the source media. 
+The hunk size must be a whole multiple of the unit size. 
+The unit size must be specified if no parent CHD file for the output is supplied. 
+If a parent CHD file for the output is supplied, the unit size must match the 
+unit size of the parent CHD file.
+.IP
+.PP
+If the \f[CR]\-\-hunksize\f[R] or \f[CR]\-hs\f[R] option is not
+supplied, the default will be:
+.IP \(bu 2
+The hunk size of the parent CHD file if a parent CHD file for the output
+is supplied.
+.IP \(bu 2
+The smallest whole multiple of the unit size not larger than 4 KiB if
+the unit size is not larger than 4 KiB (4096 bytes).
+.IP \(bu 2
+The unit size if it is larger than 4 KiB (4096 bytes).
+.PP
+If the \f[CR]\-\-compression\f[R] or \f[CR]\-c\f[R] option is not
+supplied, it defaults to \f[CR]lzma,zlib,huff,flac\f[R].
+.\"
+.SS createhd
+.TP
+.IP
+Create a CHD format hard disk image file.
+.PP
+Common options supported:
+.IP \(bu 2
+\f[CR]\-\-input <file>\f[R] / \f[CR]\-i <file>\f[R]
+.IP \(bu 2
+\f[CR]\-\-inputstartbyte <offset>\f[R] / \f[CR]\-isb <offset>\f[R]
+.IP \(bu 2
+\f[CR]\-\-inputstarthunk <offset>\f[R] / \f[CR]\-ish <offset>\f[R]
+.IP \(bu 2
+\f[CR]\-\-inputbytes <length>\f[R] / \f[CR]\-ib <length>\f[R]
+.IP \(bu 2
+\f[CR]\-\-inputhunks <length>\f[R] / \f[CR]\-ih <length>\f[R]
+.IP \(bu 2
+\f[CR]\-\-output <file>\f[R] / \f[CR]\-o <file>\f[R] (required)
+.IP \(bu 2
+\f[CR]\-\-outputparent <chdfile>\f[R] / \f[CR]\-op <chdfile>\f[R]
+.IP \(bu 2
+\f[CR]\-\-compression none|<type>[,<type>]...\f[R] /
+\f[CR]\-c none|<type>[,<type>]...\f[R]
+.IP \(bu 2
+\f[CR]\-\-hunksize <bytes>\f[R] / \f[CR]\-hs <bytes>\f[R] (required)
+.IP \(bu 2
+\f[CR]\-\-force\f[R] / \f[CR]\-f\f[R]
+.IP \(bu 2
+\f[CR]\-\-numprocessors <count>\f[R] / \f[CR]\-np <count>\f[R]
+.PP
+Additional options:
+.IP \(bu 2
+\f[CR]\-\-sectorsize <bytes>\f[R] / \f[CR]\-ss <bytes>\f[R]
+.IP \(bu 2
+\f[CR]\-\-size <bytes>\f[R] / \f[CR]\-s <bytes>\f[R]
+.IP \(bu 2
+\f[CR]\-\-chs <cylinders>,<heads>,<sectors>\f[R] /
+\f[CR]\-chs <cylinders>,<heads>,<sectors>\f[R]
+.IP \(bu 2
+\f[CR]\-\-template <template>\f[R] / \f[CR]\-tp <template>\f[R]
+.PP
+Creates a blank (zero\-filled) hard disk image if no input file is
+supplied.
+The input start/length (\f[CR]\-\-inputstartbyte\f[R] / \f[CR]\-isb\f[R]
+, \f[CR]\-\-inputstarthunk\f[R] / \f[CR]\-ish\f[R] ,
+\f[CR]\-\-inputbytes\f[R] / \f[CR]\-ib\f[R] and
+\f[CR]\-\-inputhunks\f[R] / \f[CR]\-ih\f[R] options) cannot be used if
+no input file is supplied.
+.PP
+If the \f[CR]\-\-hunksize\f[R] or \f[CR]\-hs\f[R] option is not
+supplied, the default will be:
+.IP \(bu 2
+The hunk size of the parent CHD file if a parent CHD file for the output
+is supplied.
+.IP \(bu 2
+The smallest whole multiple of the sector size not larger than 4 KiB if
+the sector size is not larger than 4 KiB (4096 bytes).
+.IP \(bu 2
+The sector size if it is larger than 4 KiB (4096 bytes).
+.PP
+If the \f[CR]\-\-compression\f[R] or \f[CR]\-c\f[R] option is not
+supplied, it defaults to \f[CR]lzma,zlib,huff,flac\f[R] if an input file
+is supplied, or \f[CR]none\f[R] if no input file is supplied.
+.\"
+.SS createcd
+.TP
+.IP
+Create a CHD format CD\-ROM image file.
+.PP
+Common options supported:
+.IP \(bu 2
+\f[CR]\-\-input <file>\f[R] / \f[CR]\-i <file>\f[R] (required)
+.IP \(bu 2
+\f[CR]\-\-output <file>\f[R] / \f[CR]\-o <file>\f[R] (required)
+.IP \(bu 2
+\f[CR]\-\-outputparent <chdfile>\f[R] / \f[CR]\-op <chdfile>\f[R]
+.IP \(bu 2
+\f[CR]\-\-compression none|<type>[,<type>]...\f[R] /
+\f[CR]\-c none|<type>[,<type>]...\f[R]
+.IP \(bu 2
+\f[CR]\-\-hunksize <bytes>\f[R] / \f[CR]\-hs <bytes>\f[R] (required)
+.IP \(bu 2
+\f[CR]\-\-force\f[R] / \f[CR]\-f\f[R]
+.IP \(bu 2
+\f[CR]\-\-numprocessors <count>\f[R] / \f[CR]\-np <count>\f[R]
+.PP
+If the \f[CR]\-\-hunksize\f[R] or \f[CR]\-hs\f[R] option is not
+supplied, the default will be the hunk size of the parent CHD if a
+parent CHD file for the output is supplied, or eight sectors per hunk
+(18,816 bytes) otherwise.
+.PP
+If the \f[CR]\-\-compression\f[R] or \f[CR]\-c\f[R] option is not
+supplied, it defaults to \f[CR]cdlz,cdzl,cdfl\f[R].
+.\"
+.SS createdvd
+.TP
+.IP
+Create a CHD format DVD\-ROM image file.
+.PP
+Common options supported:
+.IP \(bu 2
+\f[CR]\-\-input <file>\f[R] / \f[CR]\-i <file>\f[R] (required)
+.IP \(bu 2
+\f[CR]\-\-inputstartbyte <offset>\f[R] / \f[CR]\-isb <offset>\f[R]
+.IP \(bu 2
+\f[CR]\-\-inputstarthunk <offset>\f[R] / \f[CR]\-ish <offset>\f[R]
+.IP \(bu 2
+\f[CR]\-\-inputbytes <length>\f[R] / \f[CR]\-ib <length>\f[R]
+.IP \(bu 2
+\f[CR]\-\-inputhunks <length>\f[R] / \f[CR]\-ih <length>\f[R]
+.IP \(bu 2
+\f[CR]\-\-output <file>\f[R] / \f[CR]\-o <file>\f[R] (required)
+.IP \(bu 2
+\f[CR]\-\-outputparent <chdfile>\f[R] / \f[CR]\-op <chdfile>\f[R]
+.IP \(bu 2
+\f[CR]\-\-compression none|<type>[,<type>]...\f[R] /
+\f[CR]\-c none|<type>[,<type>]...\f[R]
+.IP \(bu 2
+\f[CR]\-\-hunksize <bytes>\f[R] / \f[CR]\-hs <bytes>\f[R] (required)
+.IP \(bu 2
+\f[CR]\-\-force\f[R] / \f[CR]\-f\f[R]
+.IP \(bu 2
+\f[CR]\-\-numprocessors <count>\f[R] / \f[CR]\-np <count>\f[R]
+.PP
+If the \f[CR]\-\-hunksize\f[R] or \f[CR]\-hs\f[R] option is not
+supplied, the default will be the hunk size of the parent CHD if a
+parent CHD file for the output is supplied, or two sectors per hunk
+(4096 bytes) otherwise.
+.PP
+If the \f[CR]\-\-compression\f[R] or \f[CR]\-c\f[R] option is not
+supplied, it defaults to \f[CR]lzma,zlib,huff,flac\f[R].
+.\"
+.SS createld
+.TP
+.IP
+Create a CHD format LaserDisc image file.
+.PP
+Common options supported:
+.IP \(bu 2
+\f[CR]\-\-input <file>\f[R] / \f[CR]\-i <file>\f[R] (required)
+.IP \(bu 2
+\f[CR]\-\-output <file>\f[R] / \f[CR]\-o <file>\f[R] (required)
+.IP \(bu 2
+\f[CR]\-\-outputparent <chdfile>\f[R] / \f[CR]\-op <chdfile>\f[R]
+.IP \(bu 2
+\f[CR]\-\-compression none|<type>[,<type>]...\f[R] /
+\f[CR]\-c none|<type>[,<type>]...\f[R]
+.IP \(bu 2
+\f[CR]\-\-hunksize <bytes>\f[R] / \f[CR]\-hs <bytes>\f[R] (required)
+.IP \(bu 2
+\f[CR]\-\-force\f[R] / \f[CR]\-f\f[R]
+.IP \(bu 2
+\f[CR]\-\-numprocessors <count>\f[R] / \-\f[CR]np <count>\f[R]
+.PP
+Additional options:
+.IP \(bu 2
+\f[CR]\-\-inputstartframe <offset>\f[R] / \f[CR]\-isf <offset>\f[R]
+.IP \(bu 2
+\f[CR]\-\-inputframes <length>\f[R] / \f[CR]\-if <length>\f[R]
+.PP
+If the \f[CR]\-\-compression\f[R] or \f[CR]\-c\f[R] option is not
+supplied, it defaults to \f[CR]avhu\f[R].
+.\"
+.SS extractraw
+.TP
+.IP
+Extract data from a CHD format raw media image.
+.PP
+Common options supported:
+.IP \(bu 2
+\f[CR]\-\-input <file>\f[R] / \f[CR]\-i <file>\f[R] (required)
+.IP \(bu 2
+\f[CR]\-\-inputparent <chdfile>\f[R] / \f[CR]\-ip <chdfile>\f[R]
+.IP \(bu 2
+\f[CR]\-\-inputstartbyte <offset>\f[R] / \f[CR]\-isb <offset>\f[R]
+.IP \(bu 2
+\f[CR]\-\-inputstarthunk <offset>\f[R] / \f[CR]\-ish <offset>\f[R]
+.IP \(bu 2
+\f[CR]\-\-inputbytes <length>\f[R] / \f[CR]\-ib <length>\f[R]
+.IP \(bu 2
+\f[CR]\-\-inputhunks <length>\f[R] / \f[CR]\-ih <length>\f[R]
+.IP \(bu 2
+\f[CR]\-\-output <file>\f[R] / \f[CR]\-o <file>\f[R] (required)
+.IP \(bu 2
+\f[CR]\-\-force\f[R] / \f[CR]\-f\f[R]
+.SS extracthd
+Extract data from a CHD format hard disk image.
+.PP
+Common options supported:
+.IP \(bu 2
+\f[CR]\-\-input <file>\f[R] / \f[CR]\-i <file>\f[R] (required)
+.IP \(bu 2
+\f[CR]\-\-inputparent <chdfile>\f[R] / \f[CR]\-ip <chdfile>\f[R]
+.IP \(bu 2
+\f[CR]\-\-inputstartbyte <offset>\f[R] / \f[CR]\-isb <offset>\f[R]
+.IP \(bu 2
+\f[CR]\-\-inputstarthunk <offset>\f[R] / \f[CR]\-ish <offset>\f[R]
+.IP \(bu 2
+\f[CR]\-\-inputbytes <length>\f[R] / \f[CR]\-ib <length>\f[R]
+.IP \(bu 2
+\f[CR]\-\-inputhunks <length>\f[R] / \f[CR]\-ih <length>\f[R]
+.IP \(bu 2
+\f[CR]\-\-output <file>\f[R] / \f[CR]\-o <file>\f[R] (required)
+.IP \(bu 2
+\f[CR]\-\-force\f[R] / \f[CR]\-f\f[R]
+.\"
+.SS extractcd
+.TP
+.IP
+Extract data from a CHD format CD\-ROM image.
+.PP
+Common options supported:
+.IP \(bu 2
+\f[CR]\-\-input <file>\f[R] / \f[CR]\-i <file>\f[R] (required)
+.IP \(bu 2
+\f[CR]\-\-inputparent <chdfile>\f[R] / \f[CR]\-ip <chdfile>\f[R]
+.IP \(bu 2
+\f[CR]\-\-output <file>\f[R] / \f[CR]\-o <file>\f[R] (required)
+.IP \(bu 2
+\f[CR]\-\-force\f[R] / \f[CR]\-f\f[R]
+.PP
+Additional options:
+.IP \(bu 2
+\f[CR]\-\-outputbin <file>\f[R] / \f[CR]\-ob <file>\f[R]
+.IP \(bu 2
+\f[CR]\-\-splitbin\f[R] / \f[CR]\-sb\f[R]
+.\"
+.SS extractdvd
+.TP
+.IP
+Extract data from a CHD format DVD\-ROM image.
+.PP
+Common options supported:
+.IP \(bu 2
+\f[CR]\-\-input <file>\f[R] / \f[CR]\-i <file>\f[R] (required)
+.IP \(bu 2
+\f[CR]\-\-inputparent <chdfile>\f[R] / \f[CR]\-ip <chdfile>\f[R]
+.IP \(bu 2
+\f[CR]\-\-inputstartbyte <offset>\f[R] / \f[CR]\-isb <offset>\f[R]
+.IP \(bu 2
+\f[CR]\-\-inputstarthunk <offset>\f[R] / \f[CR]\-ish <offset>\f[R]
+.IP \(bu 2
+\f[CR]\-\-inputbytes <length>\f[R] / \f[CR]\-ib <length>\f[R]
+.IP \(bu 2
+\f[CR]\-\-inputhunks <length>\f[R] / \f[CR]\-ih <length>\f[R]
+.IP \(bu 2
+\f[CR]\-\-output <file>\f[R] / \f[CR]\-o <file>\f[R] (required)
+.IP \(bu 2
+\f[CR]\-\-force\f[R] / \f[CR]\-f\f[R]
+.\"
+.SS extractld
+.TP
+.IP
+Extract data from a CHD format DVD\-ROM image.
+.PP
+Common options supported:
+.IP \(bu 2
+\f[CR]\-\-input <file>\f[R] / \f[CR]\-i <file>\f[R] (required)
+.IP \(bu 2
+\f[CR]\-\-inputparent <chdfile>\f[R] / \f[CR]\-ip <chdfile>\f[R]
+.IP \(bu 2
+\f[CR]\-\-output <file>\f[R] / \f[CR]\-o <file>\f[R] (required)
+.IP \(bu 2
+\f[CR]\-\-force\f[R] / \f[CR]\-f\f[R]
+.PP
+Additional options:
+.IP \(bu 2
+\f[CR]\-\-inputstartframe <offset>\f[R] / \f[CR]\-isf <offset>\f[R]
+.IP \(bu 2
+\f[CR]\-\-inputframes <length>\f[R] / \f[CR]\-if <length>\f[R]
+.\"
+.SS addmeta
+.TP
+.IP
+Add a metadata item to a CHD format file.
+Note that this command modifies its input file.
+.PP
+Common options supported:
+.IP \(bu 2
+\f[CR]\-\-input <file>\f[R] / \f[CR]\-i <file>\f[R] (required)
+.PP
+Additional options:
+.IP \(bu 2
+\f[CR]\-\-tag <tag>\f[R] / \f[CR]\-t <tag>\f[R] (required)
+.IP \(bu 2
+\f[CR]\-\-index <index>\f[R] / \f[CR]\-ix <index>\f[R]
+.IP \(bu 2
+\f[CR]\-\-valuetext <text>\f[R] / \f[CR]\-vt <text>\f[R]
+.IP \(bu 2
+\f[CR]\-\-valuefile <file>\f[R] / \f[CR]\-vf <file>\f[R]
+.IP \(bu 2
+\f[CR]\-\-nochecksum\f[R] / \f[CR]\-nocs\f[R]
+.\"
+.SS delmeta
+.TP
+.IP
+Delete a metadata item from a CHD format file.
+Note that this command modifies its input file.
+.PP
+Common options supported:
+.IP \(bu 2
+\f[CR]\-\-input <file>\f[R] / \f[CR]\-i <file>\f[R] (required)
+.PP
+Additional options:
+.IP \(bu 2
+\f[CR]\-\-tag <tag>\f[R] / \f[CR]\-t <tag>\f[R] (required)
+.IP \(bu 2
+\f[CR]\-\-index <index>\f[R] / \f[CR]\-ix <index>\f[R]
+.\"
+.SS dumpmeta
+.TP
+.IP
+Extract metadata items from a CHD format file to the standard output or
+to a file.
+.PP
+Common options supported:
+.IP \(bu 2
+\f[CR]\-\-input <file>\f[R] / \f[CR]\-i <file>\f[R] (required)
+.IP \(bu 2
+\f[CR]\-\-output <file>\f[R] / \f[CR]\-o <file>\f[R]
+.IP \(bu 2
+\f[CR]\-\-force\f[R] / \f[CR]\-f\f[R]
+.PP
+Additional options:
+.IP \(bu 2
+\f[CR]\-\-tag <tag>\f[R] / \f[CR]\-t <tag>\f[R] (required)
+.IP \(bu 2
+\f[CR]\-\-index <index>\f[R] / \f[CR]\-ix <index>\f[R]
+.\"
+.SS listtemplates
+.TP
+.IP
+List available hard disk templates.
+This command does not accept any options.
+.SS Compression algorithms
+The following compression algorithms are supported:
+.PP
+.B zlib \(en zlib deflate
+.IP
+.IP
+Compresses data using the zlib deflate algorithm.
+.IP
+.PP
+.B zstd \(en Zstandard
+.IP
+.IP
+Compresses data using the Zstandard algorithm. 
+This gives very good compression and decompression performance with 
+better compression ratios than zlib deflate, but older software may 
+not support CHD files that use Zstandard compression.
+.IP
+.PP
+.B lzma \(en Lempel\-Ziv\-Markov chain algorithm
+.IP
+.IP
+Compresses data using the Lempel\-Ziv\-Markov\-chain algorithm (LZMA). 
+This gives high compression ratios at the cost of poor compression and 
+decompression performance.
+.IP
+.PP
+.B huff \(en Huffman coding
+.IP
+.IP
+Compresses data using 8\-bit Huffman entropy coding.
+.IP
+.PP
+.B flac \(en Free Lossless Audio Codec
+.IP
+.IP
+Compresses data as two\-channel (stereo) 16\-bit 44.1 kHz PCM audio 
+using the Free Lossless Audio Codec (FLAC). This gives good 
+compression ratios if the media contains 16\-bit PCM audio data.
+.IP
+.PP
+.B cdzl \(en zlib deflate for CD\-ROM data
+.IP
+.IP
+Compresses audio data and subchannel data from CD\-ROM sectors 
+separately using the zlib deflate algorithm.
+.IP
+.PP
+.B cdzs \(en Zstandard for CD\-ROM data
+.IP
+.IP
+Compresses audio data and subchannel data from CD\-ROM sectors 
+separately using the Zstandard algorithm. This gives very good 
+compression and decompression performance with better 
+compression ratios than zlib deflate, but older software may 
+not support CHD files that use Zstandard compression.
+.IP
+.PP
+.B cdlz \- Lempel\-Ziv\-Markov chain algorithm/zlib deflate for CD\-ROM data
+.IP
+.IP
+Compresses audio data and subchannel data from CD\-ROM sectors 
+separately using the Lempel\-Ziv\-Markov chain algorithm (LZMA) for 
+audio data and the zlib deflate algorithm for subchannel data. 
+This gives high compression ratios at the cost of poor compression and 
+decompression performance.
+.IP
+.PP
+.B cdfl \(en Free Lossless Audio Codec/zlib deflate for CD\-ROM data
+.IP
+.IP
+Compresses audio data and subchannel data from CD\-ROM sectors 
+separately using the Free Lossless Audio Codec (FLAC) for 
+audio data and the zlib deflate algorithm for subchannel data. 
+This gives good compression ratios for audio CD tracks.
+.IP
+.PP
+.B avhu \(en Huffman coding for audio\-visual data
+.IP
+.IP
+This is a specialised compression algorithm for 
+audio\-visual (A/V) data. It should only be used for 
+LaserDisc CHD files.
+.IP
