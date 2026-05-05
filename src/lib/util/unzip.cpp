@@ -22,7 +22,7 @@
 #include "lzma/C/LzmaDec.h"
 
 #include <zlib.h>
-#include <zstd.h>
+#include "zstd/lib/zstd.h"
 
 #include <algorithm>
 #include <array>

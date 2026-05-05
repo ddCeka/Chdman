@@ -9,7 +9,6 @@ include_directories(
     ${CMAKE_SOURCE_DIR}/3rdparty
     ${CMAKE_SOURCE_DIR}/3rdparty/expat/lib
     ${CMAKE_SOURCE_DIR}/3rdparty/zlib
-    ${CMAKE_SOURCE_DIR}/3rdparty/zstd/lib
     ${CMAKE_SOURCE_DIR}/3rdparty/flac/include
     ${CMAKE_SOURCE_DIR}/3rdparty/utf8proc
 )
@@ -20,6 +19,8 @@ add_compile_definitions(
 
 add_library(utils STATIC
     ${utils_dir}/abi.h
+    ${utils_dir}/aes256cbc.cpp
+    ${utils_dir}/aes256cbc.h
     ${utils_dir}/avhuff.cpp
     ${utils_dir}/avhuff.h
     ${utils_dir}/aviio.cpp
@@ -103,8 +104,10 @@ add_library(utils STATIC
     ${utils_dir}/plaparse.h
     ${utils_dir}/png.cpp
     ${utils_dir}/png.h
+    ${utils_dir}/server_http_impl.hpp
     ${utils_dir}/server_http.hpp
     ${utils_dir}/server_https.hpp
+    ${utils_dir}/server_ws_impl.hpp
     ${utils_dir}/server_ws.hpp
     ${utils_dir}/server_wss.hpp
     ${utils_dir}/simh_tape_file.cpp
@@ -118,8 +121,8 @@ add_library(utils STATIC
     ${utils_dir}/unicode.h
     ${utils_dir}/unzip.cpp
     ${utils_dir}/unzip.h
-    ${utils_dir}/un7z.cpp
     ${utils_dir}/utf8.h
+    ${utils_dir}/un7z.cpp
     ${utils_dir}/utilfwd.h
     ${utils_dir}/vbiparse.cpp
     ${utils_dir}/vbiparse.h

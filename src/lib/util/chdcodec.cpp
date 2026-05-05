@@ -19,7 +19,7 @@
 #include "lzma/C/LzmaEnc.h"
 
 #include <zlib.h>
-#include <zstd.h>
+#include "zstd/lib/zstd.h"
 
 #include <new>
 

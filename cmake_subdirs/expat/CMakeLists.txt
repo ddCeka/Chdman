@@ -3,16 +3,14 @@
 set(expat_dir ${CMAKE_SOURCE_DIR}/3rdparty/expat)
 
 add_compile_definitions(
-    HAVE_CXX11
     HAVE_MEMMOVE
     HAVE_STDINT_H
-    HAVE_STDIO_H
     HAVE_STDLIB_H
     HAVE_STRING_H
     PACKAGE=expat
-    PACKAGE_BUGREPORT="https://github.com/libexpat/libexpat/issues"
+    PACKAGE_BUGREPORT="expat-bugs@libexpat.org"
     PACKAGE_NAME=expat
-    PACKAGE_STRING="expat-2.7.1"
+    PACKAGE_STRING="expat 2.7.1"
     PACKAGE_TARNAME=expat
     PACKAGE_URL=
     PACKAGE_VERSION="2.7.1"
@@ -20,7 +18,7 @@ add_compile_definitions(
     VERSION="2.7.1"
     XML_CONTEXT_BYTES=1024
     XML_DTD
-    XML_GE=1
+    XML_GE
     XML_NS
 )
 
@@ -34,12 +32,6 @@ add_compile_definitions(
     BYTEORDER=1234
 )
 #endif()
-
-if(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
-add_compile_definitions(
-   __USE_MINGW_ANSI_STDIO=0
-)
-endif()
 
 if(${CMAKE_SYSTEM_NAME} STREQUAL "FreeBSD" OR ${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
 add_compile_definitions(
@@ -57,12 +49,6 @@ add_compile_definitions(
     HAVE_UNISTD_H
     XML_DEV_URANDOM
 )
-endif()
-
-if(CMAKE_C_COMPILER_ID STREQUAL "Clang" OR CMAKE_SYSTEM_NAME STREQUAL "Android")
-
-else()
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-error=maybe-uninitialized")
 endif()
 
 add_library(expat STATIC

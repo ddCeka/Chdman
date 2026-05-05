@@ -5,7 +5,7 @@ if(WIN32)
 add_compile_definitions(
     UNICODE
     _UNICODE
-    _WIN32_WINNT=0x0600
+    _WIN32_WINNT=0x0501
     WIN32_LEAN_AND_MEAN
     NOMINMAX
 )
@@ -37,7 +37,7 @@ ${CMAKE_SOURCE_DIR}/src/osd/osdsync.cpp
 ${CMAKE_SOURCE_DIR}/src/osd/osdsync.h
 ${CMAKE_SOURCE_DIR}/src/osd/modules/osdmodule.cpp
 ${CMAKE_SOURCE_DIR}/src/osd/modules/osdmodule.h
-${CMAKE_SOURCE_DIR}/src/osd/modules/lib/osd_getenv.cpp #instead of osdlib_${SDLOS_TARGETOS}.cpp
+${CMAKE_SOURCE_DIR}/src/osd/modules/lib/osd_getenv.cpp
 ${CMAKE_SOURCE_DIR}/src/osd/modules/lib/osdlib.h
 )
 
@@ -60,7 +60,6 @@ target_sources(ocore_sdl PRIVATE
     ${CMAKE_SOURCE_DIR}/src/osd/modules/file/winptty.cpp
     ${CMAKE_SOURCE_DIR}/src/osd/modules/file/winsocket.cpp
     ${CMAKE_SOURCE_DIR}/src/osd/windows/winutil.cpp
-    ${CMAKE_SOURCE_DIR}/src/osd/windows/winutil.h
 )
 else()
 target_sources(ocore_sdl PRIVATE

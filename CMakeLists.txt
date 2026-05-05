@@ -1,7 +1,6 @@
 cmake_minimum_required(VERSION 3.12)
 project("chdman")
-set(build_version "0.279")
-set(vcs_revision "mame-0.279-2")
+set(build_version "0.285")
 #cd ../mame && git describe --dirty
 
 if(NOT CMAKE_BUILD_TYPE)
@@ -13,9 +12,9 @@ set(CMAKE_CXX_STANDARD 17) #needed by libocore and libutils. -
 
 if(WIN32)
 add_compile_definitions(
+  X64_WINDOWS_ABI
   CRLF=3
   OSD_WINDOWS
-  FLAC__NO_DLL
 )
 else()
 add_compile_definitions(
@@ -29,7 +28,7 @@ endif()
 
 function(addprojectflags)
   if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wsuggest-override")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wsuggest-override -flifetime-dse=1")
   endif()
 endfunction()
 
@@ -46,14 +45,14 @@ target_include_directories(chdman PRIVATE
   ${CMAKE_SOURCE_DIR}/src/lib/util
   ${CMAKE_SOURCE_DIR}/3rdparty
   ${CMAKE_SOURCE_DIR}/3rdparty/flac/include
+  ${CMAKE_SOURCE_DIR}/3rdparty/zstd/lib
 )
 set_property(TARGET chdman PROPERTY CXX_STANDARD 17)
 target_compile_definitions(chdman PRIVATE
   BARE_BUILD_VERSION="${build_version}"
-  BARE_VCS_REVISION="${vcs_revision}"
 )
 
-target_link_libraries(chdman PRIVATE utils expat 7z ocore_sdl zlib flac utf8proc zstd)
+target_link_libraries(chdman PRIVATE utils expat 7z ocore_sdl zlib zstd flac utf8proc)
 
 if(UNIX)
 target_link_libraries(chdman PRIVATE pthread util)

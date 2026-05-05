@@ -316,6 +316,9 @@ sound_stream::sound_stream(device_t &device, u32 inputs, u32 outputs, u32 sample
 	if(outputs == 0)
 		m_output_adaptive = false;
 
+	if(m_sample_rate && m_sample_rate < 1000)
+		fatalerror("Device %s requiring to create a stream with too low samplerate %d\n", device.tag(), m_sample_rate);
+
 	// create a name
 	m_name = m_device.name();
 	m_name += " '";
@@ -424,6 +427,57 @@ void sound_stream::add_dependants(std::vector<sound_stream *> &deps)
 }
 
 
+//**// Gain management
+
+void sound_stream::set_user_output_gain(float gain)
+{
+	if(gain == m_user_output_gain)
+		return;
+	update();
+	m_user_output_gain = gain;
+}
+
+void sound_stream::set_user_output_gain(s32 output, float gain)
+{
+	if(gain == m_user_output_channel_gain[output])
+		return;
+	update();
+	m_user_output_channel_gain[output] = gain;
+}
+
+void sound_stream::set_input_gain(s32 input, float gain)
+{
+	if(gain == m_input_channel_gain[input])
+		return;
+	update();
+	m_input_channel_gain[input] = gain;
+}
+
+void sound_stream::apply_input_gain(s32 input, float gain)
+{
+	if(gain == 1.0f)
+		return;
+	update();
+	m_input_channel_gain[input] *= gain;
+}
+
+void sound_stream::set_output_gain(s32 output, float gain)
+{
+	if(gain == m_output_channel_gain[output])
+		return;
+	update();
+	m_output_channel_gain[output] = gain;
+}
+
+void sound_stream::apply_output_gain(s32 output, float gain)
+{
+	if(gain == 1.0f)
+		return;
+	update();
+	m_output_channel_gain[output] *= gain;
+}
+
+
 //**// Stream sample rate
 
 void sound_stream::set_sample_rate(u32 new_rate)
@@ -438,6 +492,9 @@ void sound_stream::internal_set_sample_rate(u32 new_rate)
 		return;
 
 	if(m_started) {
+		if(m_samples_to_update > 0)
+			fatalerror("Error: set_sample_rate called while in stream_update\n");
+
 		update();
 		m_output_buffer.resample(m_sample_rate, new_rate, m_sync_time, m_device.machine().time());
 		m_sample_rate = new_rate;
@@ -1482,37 +1539,37 @@ sound_manager::config_mapping &sound_manager::config_get_sound_io(sound_io_devic
 	return m_configs.back();
 }
 
-void sound_manager::config_add_sound_io_connection_node(sound_io_device *dev, std::string_view name, float db, int index)
+void sound_manager::config_add_sound_io_connection_node(sound_io_device *dev, std::string_view name, float db, u32 index)
 {
 	internal_config_add_sound_io_connection_node(dev, name, db, index);
 	m_osd_info.m_generation --;
 	mapping_update();
 }
 
-void sound_manager::internal_config_add_sound_io_connection_node(sound_io_device *dev, std::string_view name, float db, int index)
+void sound_manager::internal_config_add_sound_io_connection_node(sound_io_device *dev, std::string_view name, float db, u32 index)
 {
 	auto &config = config_get_sound_io(dev);
 	for(auto &nmap : config.m_node_mappings)
 		if(nmap.first == name)
 			return;
-	auto it = config.m_node_mappings.begin() + ((index < 0 || index > config.m_node_mappings.size()) ? config.m_node_mappings.size() : index);
+	auto it = config.m_node_mappings.begin() + std::min(static_cast<std::size_t>(index), config.m_node_mappings.size());
 	config.m_node_mappings.emplace(it, name, db);
 }
 
-void sound_manager::config_add_sound_io_connection_default(sound_io_device *dev, float db, int index)
+void sound_manager::config_add_sound_io_connection_default(sound_io_device *dev, float db, u32 index)
 {
 	internal_config_add_sound_io_connection_default(dev, db, index);
 	m_osd_info.m_generation --;
 	mapping_update();
 }
 
-void sound_manager::internal_config_add_sound_io_connection_default(sound_io_device *dev, float db, int index)
+void sound_manager::internal_config_add_sound_io_connection_default(sound_io_device *dev, float db, u32 index)
 {
 	auto &config = config_get_sound_io(dev);
 	for(auto &nmap : config.m_node_mappings)
 		if(nmap.first == "")
 			return;
-	auto it = config.m_node_mappings.begin() + ((index < 0 || index > config.m_node_mappings.size()) ? config.m_node_mappings.size() : index);
+	auto it = config.m_node_mappings.begin() + std::min(static_cast<std::size_t>(index), config.m_node_mappings.size());
 	config.m_node_mappings.emplace(it, "", db);
 }
 
@@ -1585,37 +1642,37 @@ void sound_manager::internal_config_set_volume_sound_io_connection_default(sound
 }
 
 
-void sound_manager::config_add_sound_io_channel_connection_node(sound_io_device *dev, u32 guest_channel, std::string_view name, u32 node_channel, float db, int index)
+void sound_manager::config_add_sound_io_channel_connection_node(sound_io_device *dev, u32 guest_channel, std::string_view name, u32 node_channel, float db, u32 index)
 {
 	internal_config_add_sound_io_channel_connection_node(dev, guest_channel, name, node_channel, db, index);
 	m_osd_info.m_generation --;
 	mapping_update();
 }
 
-void sound_manager::internal_config_add_sound_io_channel_connection_node(sound_io_device *dev, u32 guest_channel, std::string_view name, u32 node_channel, float db, int index)
+void sound_manager::internal_config_add_sound_io_channel_connection_node(sound_io_device *dev, u32 guest_channel, std::string_view name, u32 node_channel, float db, u32 index)
 {
 	auto &config = config_get_sound_io(dev);
 	for(auto &cmap : config.m_channel_mappings)
 		if(std::get<0>(cmap) == guest_channel && std::get<1>(cmap) == name && std::get<2>(cmap) == node_channel)
 			return;
-	auto it = config.m_channel_mappings.begin() + ((index < 0 || index > config.m_channel_mappings.size()) ? config.m_channel_mappings.size() : index);
+	auto it = config.m_channel_mappings.begin() + std::min(static_cast<std::size_t>(index), config.m_channel_mappings.size());
 	config.m_channel_mappings.emplace(it, guest_channel, name, node_channel, db);
 }
 
-void sound_manager::config_add_sound_io_channel_connection_default(sound_io_device *dev, u32 guest_channel, u32 node_channel, float db, int index)
+void sound_manager::config_add_sound_io_channel_connection_default(sound_io_device *dev, u32 guest_channel, u32 node_channel, float db, u32 index)
 {
 	internal_config_add_sound_io_channel_connection_default(dev, guest_channel, node_channel, db, index);
 	m_osd_info.m_generation --;
 	mapping_update();
 }
 
-void sound_manager::internal_config_add_sound_io_channel_connection_default(sound_io_device *dev, u32 guest_channel, u32 node_channel, float db, int index)
+void sound_manager::internal_config_add_sound_io_channel_connection_default(sound_io_device *dev, u32 guest_channel, u32 node_channel, float db, u32 index)
 {
 	auto &config = config_get_sound_io(dev);
 	for(auto &cmap : config.m_channel_mappings)
 		if(std::get<0>(cmap) == guest_channel && std::get<1>(cmap) == "" && std::get<2>(cmap) == node_channel)
 			return;
-	auto it = config.m_channel_mappings.begin() + ((index < 0 || index > config.m_channel_mappings.size()) ? config.m_channel_mappings.size() : index);
+	auto it = config.m_channel_mappings.begin() + std::min(static_cast<std::size_t>(index), config.m_channel_mappings.size());
 	config.m_channel_mappings.emplace(it, guest_channel, "", node_channel, db);
 }
 
@@ -2681,8 +2738,7 @@ void sound_manager::streams_update()
 	}
 
 	for(sound_stream *stream : m_ordered_streams)
-		if(stream->device().type() != SPEAKER)
-			stream->sync(now);
+		stream->sync(now);
 
 	for(osd_input_stream &stream : m_osd_input_streams)
 		stream.m_buffer.sync();
